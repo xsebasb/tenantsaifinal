@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Tenant</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome para el ícono de lupa -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Crear Tenant</h3>
+        </div>
+        <div class="card-body">
+            <form id="tenantForm">
+                <div class="form-group">
+                    <label for="documento">Documento:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="documento" name="documento" placeholder="Documento" required>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="btnBuscarDocumento">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="verification_digit">Dígito de verificación:</label>
+                    <input type="number" class="form-control" id="verification_digit" name="verification_digit" required>
+                </div>
+                <div class="form-group">
+                    <label for="company_name">Nombre de la empresa:</label>
+                    <input type="text" class="form-control" id="company_name" name="company_name">
+                </div>
+                <div class="form-group">
+                    <label for="company_email">Email de la empresa:</label>
+                    <input type="email" class="form-control" id="company_email" name="company_email">
+                </div>
+                <div class="form-group">
+                    <label for="whatsapp_number">Número de WhatsApp:</label>
+                    <input type="text" class="form-control" id="whatsapp_number" name="whatsapp_number">
+                </div>
+                <div class="form-group">
+                    <label for="company_address">Dirección de la empresa:</label>
+                    <input type="text" class="form-control" id="company_address" name="company_address">
+                </div>
+                <div class="form-group">
+                    <label for="company_phone">Teléfono de la empresa:</label>
+                    <input type="text" class="form-control" id="company_phone" name="company_phone">
+                </div>
+                <button type="submit" class="btn btn-success">Crear</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery, Bootstrap JS, SweetAlert2 y SheetJS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+    $(document).ready(function(){
+        // Buscar documento
+        $('#btnBuscarDocumento').click(function() {
+            var documento = $('#documento').val();
+            if(documento.trim() === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo vacío',
+                    text: 'Ingrese un documento para buscar.'
+                });
+                return;
+            }
+            $.ajax({
+                url: '/tenants/buscar-por-documento',
+                type: 'GET',
+                data: { documento: documento },
+                success: function(data) {
+                    if(data && data.length > 0) {
+                        var cliente = data[0];
+                        $('#verification_digit').val(cliente.cv || '');
+                        $('#company_name').val(cliente.company || '');
+                        $('#company_email').val(cliente.email || '');
+                        $('#company_address').val(cliente.addr1 || '');
+                        $('#company_phone').val(cliente.phone1 || '');
+                        $('#whatsapp_number').val(cliente.phone2 || '');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Datos encontrados',
+                            text: 'Los datos del cliente han sido cargados.'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sin resultados',
+                            text: 'No se encontró información para ese documento.'
+                        });
+                        // Limpiar los campos del formulario
+                        $('#verification_digit').val('');
+                        $('#company_name').val('');
+                        $('#company_email').val('');
+                        $('#company_address').val('');
+                        $('#company_phone').val('');
+                        $('#whatsapp_number').val('');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al buscar el documento.'
+                    });
+                }
+            });
+        });
+
+        // Enviar formulario crear tenant
+        $('#tenantForm').on('submit', function(e) {
+            e.preventDefault();
+
+            var data = {
+                document: $('#documento').val(),
+                verification_digit: $('#verification_digit').val(),
+                company_name: $('#company_name').val(),
+                company_email: $('#company_email').val(),
+                whatsapp_number: $('#whatsapp_number').val(),
+                company_address: $('#company_address').val(),
+                company_phone: $('#company_phone').val()
+            };
+
+            $.ajax({
+                url: '/tenants-api/crear',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    let json;
+                    try {
+                        json = typeof response === 'string' ? JSON.parse(response) : response;
+                    } catch (e) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response
+                        });
+                        return;
+                    }
+                    const companyId = json.company_id || '';
+                    const correo = companyId + '@fe.binariotic.com';
+                    const usuario = companyId;
+                    const url = `https://${companyId}.liriumsas.app/admin`;
+
+                    const mensajeHtml = `
+                        <b>Tenant creado exitosamente.</b><br>
+                        <b>Correo:</b> ${correo}<br>
+                        <b>Usuario:</b> ${usuario}<br>
+                        <b>URL:</b> <a href="${url}" target="_blank">${url}</a>
+                    `;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Tenant creado!',
+                        html: mensajeHtml,
+                        showCancelButton: true,
+                        confirmButtonText: 'Descargar Excel',
+                        cancelButtonText: 'Cerrar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const wb = XLSX.utils.book_new();
+                            const wsData = [
+                                ['Correo', 'Usuario', 'URL'],
+                                [correo, usuario, url]
+                            ];
+                            const ws = XLSX.utils.aoa_to_sheet(wsData);
+                            XLSX.utils.book_append_sheet(wb, ws, 'Tenant');
+                            XLSX.writeFile(wb, `tenant_${companyId}.xlsx`);
+                        }
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al crear el tenant.'
+                    });
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
