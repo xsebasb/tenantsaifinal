@@ -12,7 +12,9 @@ import java.util.Properties;
 public class LiriumConfig {
 
     private String tokenUrl;
-    private String tenantUrl;
+    private String tenantUrl; // creación
+    private String tenantsBaseUrl; // lectura base https://.../api/tenants/
+    private String allTenantsBaseUrl;
     private String username;
     private String password;
     private String usernameDB;
@@ -59,6 +61,14 @@ public class LiriumConfig {
         this.tenantUrl = tenantUrl;
     }
 
+    public String getTenantsBaseUrl() {
+        return tenantsBaseUrl;
+    }
+
+    public void setTenantsBaseUrl(String tenantsBaseUrl) {
+        this.tenantsBaseUrl = tenantsBaseUrl;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -75,6 +85,14 @@ public class LiriumConfig {
         this.password = password;
     }
 
+    public String getAllTenantsBaseUrl() {
+        return allTenantsBaseUrl;
+    }
+
+    public void setAllTenantsBaseUrl(String allTenantsBaseUrl) {
+        this.allTenantsBaseUrl = allTenantsBaseUrl;
+    }
+
     public LiriumConfig() {
         Properties props = new Properties();
 
@@ -85,11 +103,20 @@ public class LiriumConfig {
             props.load(input);
             this.tokenUrl = props.getProperty("url.token");
             this.tenantUrl = props.getProperty("url.create-tenant");
+            this.tenantsBaseUrl = props.getProperty("url.tenants-base");
+            this.allTenantsBaseUrl = props.getProperty("url.tenants.base.tenants");
             this.username = props.getProperty("username");
             this.password = props.getProperty("password");
             this.usernameDB = props.getProperty("usernameDB");
             this.passwordDB = props.getProperty("passwordDB");
             this.database = props.getProperty("database");
+            // Fallback si no se configuró explícitamente la base: derivar de create-tenant si posible
+            if (this.tenantsBaseUrl == null || this.tenantsBaseUrl.trim().isEmpty()) {
+                // intentar truncar hasta "/api/tenants/"
+                if (this.tenantUrl != null && this.tenantUrl.contains("/api/tenants/")) {
+                    this.tenantsBaseUrl = this.tenantUrl.substring(0, this.tenantUrl.indexOf("/api/tenants/") + "/api/tenants/".length());
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error al cargar el archivo config.cfg en " + configPath, e);
         }

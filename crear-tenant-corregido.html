@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tenants</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .tab-error { color: #dc3545; font-weight: bold; padding: 5px 0; }
+        .pointer { cursor: pointer; }
+        .badge-status { min-width: 80px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Gestor de Tenants</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <ul class="nav nav-tabs" id="mainTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="crear-tab" data-toggle="tab" href="#tab-crear">Crear Tenant</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="listar-tab" data-toggle="tab" href="#tab-listar">Listar Tenants</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="summary-tab" data-toggle="tab" href="#tab-summary">Resumen Tenant</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="stats-tab" data-toggle="tab" href="#tab-stats">Estadísticas</a>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <!-- Tab Crear -->
+            <div class="tab-pane fade show active" id="tab-crear">
+                <div class="card">
+                    <div class="card-header">Crear nuevo tenant</div>
+                    <div class="card-body">
+                        <div id="crearMsg" class="mb-2"></div>
+                        <form id="crearForm">
+                            <div class="form-group">
+                                <label for="schemaInput">Schema</label>
+                                <input type="text" class="form-control" id="schemaInput" required placeholder="Nombre único para el schema">
+                                <small class="form-text text-muted">Sólo letras minúsculas, números y guiones bajos. Entre 3 y 63 caracteres.</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="nameInput">Nombre</label>
+                                <input type="text" class="form-control" id="nameInput" required placeholder="Nombre descriptivo">
+                            </div>
+                            <div class="form-group">
+                                <label for="paidUntilInput">Pagado Hasta</label>
+                                <input type="date" class="form-control" id="paidUntilInput" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Trial</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="trialSwitch">
+                                    <label class="custom-control-label" for="trialSwitch">En período de prueba</label>
+                                </div>
+                            </div>
+                            <h5 class="mt-3">Información de Empresa</h5>
+                            <div class="form-group">
+                                <label for="companyNameInput">Razón Social</label>
+                                <input type="text" class="form-control" id="companyNameInput" required placeholder="Nombre de la empresa">
+                            </div>
+                            <div class="form-group">
+                                <label for="companyDocumentInput">Documento</label>
+                                <input type="text" class="form-control" id="companyDocumentInput" required placeholder="RUT o documento">
+                            </div>
+                            <div class="form-group">
+                                <label for="companyEmailInput">Email</label>
+                                <input type="email" class="form-control" id="companyEmailInput" placeholder="Email de contacto">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="companyPhoneInput">Teléfono</label>
+                                    <input type="text" class="form-control" id="companyPhoneInput" placeholder="Teléfono">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="companyCityInput">Ciudad</label>
+                                    <input type="text" class="form-control" id="companyCityInput" placeholder="Ciudad">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear</button>
+                            <button type="button" id="btnCrearCompleto" class="btn btn-outline-secondary">Formulario Completo</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Listar -->
+            <div class="tab-pane fade" id="tab-listar">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>Listado de tenants</div>
+                        <div class="form-inline">
+                            <input type="text" class="form-control form-control-sm mr-2" id="searchInput" placeholder="Buscar...">
+                            <button class="btn btn-sm btn-outline-primary" id="btnSearch"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="listadoMsg" class="mb-2"></div>
+                        <div class="mb-3 d-flex flex-wrap">
+                            <div class="form-inline mr-3 mb-2">
+                                <label class="mr-2">Activo:</label>
+                                <select class="form-control form-control-sm" id="activeSelect">
+                                    <option value="">Todos</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <div class="form-inline mr-3 mb-2">
+                                <label class="mr-2">Expirado:</label>
+                                <select class="form-control form-control-sm" id="expiredSelect">
+                                    <option value="">Todos</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <div class="form-inline mr-3 mb-2">
+                                <label class="mr-2">Trial:</label>
+                                <select class="form-control form-control-sm" id="onTrialSelect">
+                                    <option value="">Todos</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <div class="form-inline mb-2">
+                                <label class="mr-2">Ordenar por:</label>
+                                <select class="form-control form-control-sm" id="orderingSelect">
+                                    <option value="id">ID (asc)</option>
+                                    <option value="-id">ID (desc)</option>
+                                    <option value="name">Nombre (asc)</option>
+                                    <option value="-name">Nombre (desc)</option>
+                                    <option value="schema_name">Schema (asc)</option>
+                                    <option value="-schema_name">Schema (desc)</option>
+                                    <option value="created_on">Fecha creación (asc)</option>
+                                    <option value="-created_on">Fecha creación (desc)</option>
+                                    <option value="paid_until">Paid until (asc)</option>
+                                    <option value="-paid_until">Paid until (desc)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <table class="table table-sm table-striped" id="tenantsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Schema</th>
+                                    <th>Nombre</th>
+                                    <th>Pagado Hasta</th>
+                                    <th>Trial</th>
+                                    <th>Creado</th>
+                                    <th>Empresa</th>
+                                    <th>Documento</th>
+                                    <th>Activo</th>
+                                    <th>Expirado</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody><tr><td colspan="12" class="text-center text-muted">Seleccione la pestaña para cargar.</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between" id="paginationBar" style="display:none;">
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" id="prevPage">« Anterior</button>
+                            <button class="btn btn-outline-secondary btn-sm" id="nextPage">Siguiente »</button>
+                        </div>
+                        <div id="pageInfo" class="small text-muted"></div>
+                        <div>
+                            <select id="pageSizeSelect" class="form-control form-control-sm">
+                                <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Summary -->
+            <div class="tab-pane fade" id="tab-summary">
+                <div class="card">
+                    <div class="card-header">Resumen del Tenant</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <div class="form-inline mb-3">
+                                <input type="number" class="form-control form-control-sm mr-2" id="tenantIdInput" placeholder="ID del tenant">
+                                <button class="btn btn-sm btn-primary" id="btnCargarSummary">Cargar</button>
+                            </div>
+                        </div>
+                        <div id="summaryMsg" class="mb-2"></div>
+                        <div id="summaryLoading" style="display:none;" class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Cargando...</span>
+                            </div>
+                            <div class="mt-2">Cargando información...</div>
+                        </div>
+                        <div id="summaryContent" class="py-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Estadísticas -->
+            <div class="tab-pane fade" id="tab-stats">
+                <div class="card">
+                    <div class="card-header">Estadísticas generales</div>
+                    <div class="card-body">
+                        <div id="statsMsg" class="mb-2"></div>
+                        <div class="row" id="statsRow">
+                            <div class="col-12 text-center py-3 text-muted">Seleccione la pestaña para cargar las estadísticas.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales para paginación
+        let currentPage = 1;
+        let totalPages = 1;
+        let pageSize = 10;
+        let listadoLoaded = false;
+
+        // Función para escapar HTML
+        function esc(str) { return str? String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+
+        // Función para mostrar alertas
+        function alerta(tipo, titulo, mensaje){ alert(`${titulo}: ${mensaje}`); }
+
+        $(document).ready(function(){
+            // Inicialización de tabs
+            $('#mainTabs a').on('click', function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+
+            // Eventos para cambio de tabs
+            $('#mainTabs a[href="#tab-listar"]').on('shown.bs.tab', function (e) {
+                if(!listadoLoaded) cargarListado();
+            });
+
+            $('#mainTabs a[href="#tab-stats"]').on('shown.bs.tab', function (e) {
+                if(!statsLoaded) cargarStats();
+            });
+
+            // Eventos para formulario
+            $('#crearForm').submit(function(e){
+                e.preventDefault();
+                // Validar schema
+                const schema = $('#schemaInput').val().trim();
+                if(!/^[a-z0-9_]{3,63}$/.test(schema)){
+                    $('#crearMsg').addClass('tab-error').text('Schema inválido. Use solo letras minúsculas, números y guiones bajos (3-63 caracteres).');
+                    return;
+                }
+
+                crearTenant();
+            });
+
+            $('#btnCrearCompleto').click(function(){ window.location.href = '/crear-tenant-completo'; });
+
+            // Eventos para búsqueda y filtros
+            $('#btnSearch, #activeSelect, #expiredSelect, #onTrialSelect, #orderingSelect').on('click change', function(){
+                currentPage = 1; // Resetear a primera página al cambiar filtros
+                cargarListado();
+            });
+
+            $('#searchInput').on('keypress', function(e){
+                if(e.which === 13){
+                    currentPage = 1;
+                    cargarListado();
+                }
+            });
+
+            // Evento para cambio de tamaño de página
+            $('#pageSizeSelect').change(function(){
+                pageSize = parseInt($(this).val(), 10);
+                currentPage = 1; // Resetear a primera página al cambiar tamaño
+                cargarListado();
+            });
+
+            // CORRECCIÓN: Configuración de los botones de paginación
+            // Utilizamos funciones anónimas directamente asociadas a los botones en vez de usar $(document).on
+            $('#prevPage').on('click', function(){
+                if(currentPage > 1){
+                    currentPage--;
+                    cargarListado();
+                }
+            });
+
+            $('#nextPage').on('click', function(){
+                if(currentPage < totalPages){
+                    currentPage++;
+                    cargarListado();
+                }
+            });
+        });
+
+        function crearTenant(){
+            $('#crearMsg').removeClass('tab-error').text('');
+            const data = {
+                schema_name: $('#schemaInput').val().trim(),
+                name: $('#nameInput').val().trim(),
+                paid_until: $('#paidUntilInput').val(),
+                on_trial: $('#trialSwitch').is(':checked'),
+                company_name: $('#companyNameInput').val().trim(),
+                company_document: $('#companyDocumentInput').val().trim(),
+                company_email: $('#companyEmailInput').val().trim(),
+                company_phone: $('#companyPhoneInput').val().trim(),
+                company_city: $('#companyCityInput').val().trim()
+            };
+
+            $.ajax({
+                url: '/tenants-api',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response){
+                    $('#crearMsg').removeClass('tab-error').html(`<div class="alert alert-success">Tenant creado correctamente. ID: ${response.id}</div>`);
+                    $('#crearForm')[0].reset();
+                },
+                error: function(xhr){
+                    let msg = '';
+                    try {
+                        const err = JSON.parse(xhr.responseText);
+                        msg = err.message || 'Error desconocido';
+                    } catch(e) {
+                        msg = `Error ${xhr.status}: ${xhr.statusText}`;
+                    }
+                    $('#crearMsg').addClass('tab-error').html(`<div class="alert alert-danger">Error al crear tenant: ${msg}</div>`);
+                }
+            });
+        }
+
+        function construirQuery(){
+            const q = {};
+            const s = $('#searchInput').val().trim(); if(s) q.search = s;
+            const a = $('#activeSelect').val(); if(a!=='') q.active = a;
+            const ex = $('#expiredSelect').val(); if(ex!=='') q.expired = ex;
+            const ot = $('#onTrialSelect').val(); if(ot!=='') q.on_trial = ot;
+            const ord = $('#orderingSelect').val(); if(ord) q.ordering = ord;
+            q.page = currentPage;
+            q.page_size = pageSize;
+            return q;
+        }
+
+        function cargarListado(){
+            $('#listadoMsg').removeClass('tab-error').text('');
+            $('#tenantsTable tbody').html('<tr><td colspan="12" class="text-center">Cargando...</td></tr>');
+            $('#paginationBar').show(); // Aseguramos que la barra de paginación sea visible
+
+            const q = construirQuery();
+            $.get('/tenants-api', q)
+             .done(function(data){
+                renderListado(data);
+                listadoLoaded = true;
+             })
+             .fail(function(xhr){
+                $('#tenantsTable tbody').html('<tr><td colspan="12" class="text-danger text-center">Error '+xhr.status+'</td></tr>');
+                $('#listadoMsg').addClass('tab-error').text('Fallo al cargar listado');
+                $('#paginationBar').hide();
+             });
+        }
+
+        function renderListado(data){
+            if(!data || !data.results){
+                $('#tenantsTable tbody').html('<tr><td colspan="12" class="text-center">Sin datos</td></tr>');
+                $('#paginationBar').hide();
+                return;
+            }
+
+            const rows = data.results.map(t => {
+                const badge = t._status_display? `<span class="badge badge-info badge-status">${esc(t._status_display)}</span>`: '';
+                return `<tr data-id="${t.id}" class="fila-tenant pointer">`+
+                       `<td>${t.id}</td><td>${esc(t.schema_name)}</td><td>${esc(t.name)}</td>`+
+                       `<td>${esc(t.paid_until||'')}</td><td>${t.on_trial? 'Sí':'No'}</td>`+
+                       `<td>${esc(t.created_on||'')}</td><td>${esc(t.company_name||'')}</td>`+
+                       `<td>${esc(t.company_document||'')}</td><td>${t.is_active? 'Sí':'No'}</td>`+
+                       `<td>${t.is_expired? 'Sí':'No'}</td><td>${badge}</td>`+
+                       `<td><button class="btn btn-outline-info btn-sm btnVerSummary" data-id="${t.id}" title="Ver resumen"><i class="fa fa-eye"></i></button></td>`+
+                       `</tr>`;
+            }).join('');
+
+            $('#tenantsTable tbody').html(rows);
+
+            // CORRECCIÓN: Actualizamos variables globales con datos del servidor
+            currentPage = data.current_page || 1;
+            totalPages = data.total_pages || 1;
+
+            // Actualizamos la información de paginación
+            $('#pageInfo').text(`Página ${currentPage} de ${totalPages} (Total: ${data.count || 0} registros)`);
+
+            // CORRECCIÓN: Actualizamos el estado de los botones usando has_previous y has_next cuando están disponibles
+            if (data.has_previous !== undefined && data.has_next !== undefined) {
+                $('#prevPage').prop('disabled', !data.has_previous);
+                $('#nextPage').prop('disabled', !data.has_next);
+            } else {
+                // Si no tenemos esos campos, usamos la lógica con current_page y total_pages
+                $('#prevPage').prop('disabled', currentPage <= 1);
+                $('#nextPage').prop('disabled', currentPage >= totalPages);
+            }
+
+            // Aseguramos que la barra de paginación sea visible si hay más de una página
+            if (totalPages > 1) {
+                $('#paginationBar').show();
+            } else {
+                // Si solo hay una página, podemos ocultar la barra de paginación
+                $('#paginationBar').show(); // Mantenemos visible pero con botones deshabilitados
+            }
+
+            // Depuración en consola para verificar valores
+            console.log('Paginación:', {
+                currentPage: data.current_page,
+                totalPages: data.total_pages,
+                hasNext: data.has_next,
+                hasPrevious: data.has_previous
+            });
+        }
+
+        $(document).on('click','.btnVerSummary', function(){ mostrarSummary($(this).data('id')); $('#mainTabs a[href="#tab-summary"]').tab('show'); });
+        $(document).on('dblclick','.fila-tenant', function(){ mostrarSummary($(this).data('id')); $('#mainTabs a[href="#tab-summary"]').tab('show'); });
+
+        // ==== SUMMARY (lazy) ====
+        let summaryAuto = false;
+        $('#btnCargarSummary').click(function(){ const id = parseInt($('#tenantIdInput').val(),10); if(id>0) mostrarSummary(id); else alerta('info','ID requerido','Ingrese un ID válido.'); });
+        function mostrarSummary(id){ $('#summaryMsg').text(''); $('#summaryLoading').show(); $('#summaryContent').hide().html('');
+            $.get(`/tenants-api/${id}/summary`)
+             .done(function(d){ renderSummary(d); })
+             .fail(function(xhr){ $('#summaryMsg').addClass('tab-error').text('Error '+xhr.status+' al obtener summary'); })
+             .always(function(){ $('#summaryLoading').hide(); });
+        }
+        function renderSummary(d){
+            if(!d){ $('#summaryContent').html('<div class="text-danger">Sin datos</div>').show(); return; }
+            const html = `<h6>Identificación</h6><div class="row"><div class="col-md-3"><strong>ID:</strong> ${d.id}</div><div class="col-md-3"><strong>Schema:</strong> ${esc(d.schema_name)}</div><div class="col-md-6"><strong>Nombre:</strong> ${esc(d.name)}</div></div><hr class="my-2"><h6>Estado</h6><div class="row"><div class="col-md-3"><strong>Activo:</strong> ${d.is_active? 'Sí':'No'}</div><div class="col-md-3"><strong>Expirado:</strong> ${d.is_expired? 'Sí':'No'}</div><div class="col-md-3"><strong>Días para expirar:</strong> ${d.days_until_expiration!=null? d.days_until_expiration:'-'}</div><div class="col-md-3"><strong>Trial:</strong> ${d.on_trial? 'Sí':'No'}</div></div><div class="row mt-1"><div class="col-md-4"><strong>Paid Until:</strong> ${esc(d.paid_until||'')}</div><div class="col-md-4"><strong>Creado:</strong> ${esc(d.created_on||'')}</div><div class="col-md-4"><strong>Status Display:</strong> ${esc(d.status_display||'')}</div></div><hr class="my-2"><h6>Compañía</h6><div class="row"><div class="col-md-4"><strong>Documento:</strong> ${esc(d.company_info? d.company_info.document:'')}</div><div class="col-md-4"><strong>Razón Social:</strong> ${esc(d.company_info? d.company_info.name:'')}</div><div class="col-md-4"><strong>Email:</strong> ${esc(d.company_info? d.company_info.email:'')}</div></div><div class="row mt-1"><div class="col-md-4"><strong>Teléfono:</strong> ${esc(d.company_info? d.company_info.phone:'')}</div><div class="col-md-4"><strong>Ciudad:</strong> ${esc(d.company_info? d.company_info.city:'')}</div></div><hr class="my-2"><h6>Uso</h6><div class="row"><div class="col-md-3"><strong>Facturas:</strong> ${d.usage_summary? d.usage_summary.invoices_count:'-'}</div><div class="col-md-3"><strong>Usuarios:</strong> ${d.usage_summary? d.usage_summary.users_count:'-'}</div><div class="col-md-3"><strong>Storage:</strong> ${d.usage_summary? d.usage_summary.storage_used:'-'}</div><div class="col-md-3"><strong>Última actividad:</strong> ${esc(d.usage_summary? d.usage_summary.last_activity:'')}</div></div>`;
+            $('#summaryContent').html(html).show(); $('#tenantIdInput').val(d.id);
+        }
+
+        // ==== STATS (lazy) ====
+        let statsLoaded = false;
+        function cargarStats(){
+            $('#statsMsg').text(''); $('#statsRow').html('<div class="col-12 text-center py-3">Cargando estadísticas...</div>');
+            $.get('/tenants-api/stats')
+             .done(function(s){ renderStats(s); statsLoaded = true; })
+             .fail(function(xhr){ $('#statsMsg').addClass('tab-error').text('Error '+xhr.status+' al cargar estadísticas'); $('#statsRow').html('<div class="col-12 text-danger">Error</div>'); });
+        }
+        function renderStats(stats){
+            if(!stats){ $('#statsRow').html('<div class="col-12 text-danger">Sin datos</div>'); return; }
+            const html = `
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header">Tenants</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Total:</strong> ${stats.total_tenants||0}</div>
+                            <div class="col-sm-6"><strong>Activos:</strong> ${stats.active_tenants||0}</div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-6"><strong>En Trial:</strong> ${stats.trial_tenants||0}</div>
+                            <div class="col-sm-6"><strong>Expirados:</strong> ${stats.expired_tenants||0}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Promedio por tenant</div>
+                    <div class="card-body">
+                        <div><strong>Usuarios:</strong> ${stats.avg_users_per_tenant? stats.avg_users_per_tenant.toFixed(2):'-'}</div>
+                        <div><strong>Facturas:</strong> ${stats.avg_invoices_per_tenant? stats.avg_invoices_per_tenant.toFixed(2):'-'}</div>
+                        <div><strong>Storage (MB):</strong> ${stats.avg_storage_per_tenant? stats.avg_storage_per_tenant.toFixed(2):'-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header">Otros datos</div>
+                    <div class="card-body">
+                        <div><strong>Creados hoy:</strong> ${stats.tenants_created_today||0}</div>
+                        <div><strong>Creados este mes:</strong> ${stats.tenants_created_this_month||0}</div>
+                        <div><strong>Expiran próximos 30 días:</strong> ${stats.tenants_expiring_in_30_days||0}</div>
+                        <div><strong>Última actualización:</strong> ${esc(stats.last_updated||'')}</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Totales</div>
+                    <div class="card-body">
+                        <div><strong>Total usuarios:</strong> ${stats.total_users||0}</div>
+                        <div><strong>Total facturas:</strong> ${stats.total_invoices||0}</div>
+                        <div><strong>Total storage (MB):</strong> ${stats.total_storage? stats.total_storage.toFixed(2):'-'}</div>
+                    </div>
+                </div>
+            </div>
+            `;
+            $('#statsRow').html(html);
+        }
+    </script>
+</body>
+</html>
+

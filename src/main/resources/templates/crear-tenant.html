@@ -2,195 +2,1161 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Crear Tenant</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- Font Awesome para el ícono de lupa -->
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Crear Tenant & Gestión</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .table-sm td, .table-sm th { padding: .3rem; }
+        .pointer { cursor:pointer; }
+        .badge-status { font-size: 0.75rem; }
+        .suggestions-box { position: absolute; z-index: 1000; background: #fff; width:100%; border:1px solid #ced4da; max-height:200px; overflow-y:auto; }
+        .suggestions-box div { padding:4px 8px; cursor:pointer; }
+        .suggestions-box div:hover { background:#f1f1f1; }
+        .section-title { border-left:4px solid #007bff; padding-left:8px; margin-top:2rem; }
+        .card-kpi { border-left:4px solid #007bff; }
+        .loading-inline { font-size: .85rem; color:#555; }
+        .tab-error { color:#b30000; font-size:.85rem; }
+        .pagination-buttons .btn { margin: 0 2px; }
+        .pagination-buttons span { padding: 0 8px; color: #6c757d; }
+        .pagination-info {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;
+        }
+        .pagination-controls { display: flex; align-items: center; gap: 10px; }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h3>Crear Tenant</h3>
-        </div>
-        <div class="card-body">
-            <form id="tenantForm">
-                <div class="form-group">
-                    <label for="documento">Documento:</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="documento" name="documento" placeholder="Documento" required>
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="btnBuscarDocumento">
-                                <i class="fa fa-search"></i>
-                            </button>
+<div class="container mt-4 mb-5">
+    <h2 class="mb-4">Gestión de Tenants</h2>
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-crear" role="tab">Crear Tenant</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-listado" role="tab">Listado</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-summary" role="tab">Resumen / Detalle</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-stats" role="tab">Estadísticas</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-folios" role="tab">Folios</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-folios-suscripciones" role="tab">Folios con Suscripciones</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-lookup" role="tab">Lookup & Autocomplete</a></li>
+    </ul>
+
+    <div class="tab-content p-3 border border-top-0 bg-white">
+        <!-- ===================== TAB CREAR ===================== -->
+        <div class="tab-pane fade show active" id="tab-crear" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-primary text-white"><h5 class="mb-0">Crear Tenant</h5></div>
+                <div class="card-body">
+                    <form id="tenantForm">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="documento">Documento</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="documento" name="documento" required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnBuscarDocumento"><i class="fa fa-search"></i></button>
+                                    </div>
+                                </div>
+                                <small id="docHelp" class="form-text text-muted">Escriba y presione la lupa.</small>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="verification_digit">Dígito Verificación</label>
+                                <input type="text" pattern="[0-9xX]" class="form-control" id="verification_digit" name="verification_digit" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="company_name">Nombre Empresa</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name">
+                            </div>
                         </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="company_email">Email Empresa</label>
+                                <input type="email" class="form-control" id="company_email" name="company_email" autocomplete="off">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="company_address">Dirección</label>
+                                <input type="text" class="form-control" id="company_address" name="company_address">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="company_phone">Teléfono</label>
+                                <input type="text" class="form-control" id="company_phone" name="company_phone">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="whatsapp_number">WhatsApp</label>
+                                <input type="text" class="form-control" id="whatsapp_number" name="whatsapp_number">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="btnCrear"><i class="fa fa-plus-circle"></i> Crear</button>
+                        <span id="crearTenantLoading" class="loading-inline ml-2" style="display:none;">Creando...</span>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TAB LISTADO ===================== -->
+        <div class="tab-pane fade" id="tab-listado" role="tabpanel">
+            <div id="listadoMsg" class="mb-2 small"></div>
+            <h5 class="section-title">Listado de Tenants</h5>
+            <form id="filtersForm" class="mb-3">
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-3">
+                        <label for="searchInput">Buscar (name, schema, doc)</label>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Texto a buscar">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="activeSelect">Activo</label>
+                        <select id="activeSelect" class="form-control">
+                            <option value="">--</option>
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="expiredSelect">Expirado</label>
+                        <select id="expiredSelect" class="form-control">
+                            <option value="">--</option>
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="onTrialSelect">En Trial</label>
+                        <select id="onTrialSelect" class="form-control">
+                            <option value="">--</option>
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="orderingSelect">Ordenar</label>
+                        <select id="orderingSelect" class="form-control">
+                            <option value="name">Nombre ↑</option>
+                            <option value="-name">Nombre ↓</option>
+                            <option value="created_on">Creación ↑</option>
+                            <option value="-created_on">Creación ↓</option>
+                            <option value="paid_until">Pago ↑</option>
+                            <option value="-paid_until">Pago ↓</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-1 text-right">
+                        <button type="button" id="btnAplicarFiltros" class="btn btn-primary btn-block" title="Aplicar filtros"><i class="fa fa-filter"></i></button>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="verification_digit">Dígito de verificación:</label>
-                    <input type="number" class="form-control" id="verification_digit" name="verification_digit" required>
-                </div>
-                <div class="form-group">
-                    <label for="company_name">Nombre de la empresa:</label>
-                    <input type="text" class="form-control" id="company_name" name="company_name">
-                </div>
-                <div class="form-group">
-                    <label for="company_email">Email de la empresa:</label>
-                    <input type="email" class="form-control" id="company_email" name="company_email">
-                </div>
-                <div class="form-group">
-                    <label for="whatsapp_number">Número de WhatsApp:</label>
-                    <input type="text" class="form-control" id="whatsapp_number" name="whatsapp_number">
-                </div>
-                <div class="form-group">
-                    <label for="company_address">Dirección de la empresa:</label>
-                    <input type="text" class="form-control" id="company_address" name="company_address">
-                </div>
-                <div class="form-group">
-                    <label for="company_phone">Teléfono de la empresa:</label>
-                    <input type="text" class="form-control" id="company_phone" name="company_phone">
-                </div>
-                <button type="submit" class="btn btn-success">Crear</button>
             </form>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm" id="tenantsTable">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>ID</th><th>Schema</th><th>Nombre</th><th>Pago Hasta</th><th>Trial</th><th>Creado</th><th>Empresa</th><th>Doc Empresa</th><th>Activo</th><th>Expirado</th><th>Estado</th><th></th>
+                    </tr>
+                    </thead>
+                    <tbody><tr><td colspan="12" class="text-center text-muted">Seleccione la pestaña para cargar.</td></tr></tbody>
+                </table>
+            </div>
+
+            <div class="pagination-info" id="paginationInfo" style="display:none;">
+                <div class="pagination-controls">
+                    <button class="btn btn-outline-secondary btn-sm" id="firstPage" title="Primera página"><i class="fa fa-angle-double-left"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" id="prevPage" title="Página anterior"><i class="fa fa-angle-left"></i></button>
+                    <div id="pageNumbers" class="d-flex align-items-center"></div>
+                    <button class="btn btn-outline-secondary btn-sm" id="nextPage" title="Página siguiente"><i class="fa fa-angle-right"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" id="lastPage" title="Última página"><i class="fa fa-angle-double-right"></i></button>
+                </div>
+                <div id="pageInfo" class="small text-muted"></div>
+                <div class="d-flex align-items-center">
+                    <label for="pageSizeSelect" class="mr-2 mb-0 small">Mostrar:</label>
+                    <select id="pageSizeSelect" class="form-control form-control-sm" style="width:auto;">
+                        <option value="10" selected>10</option><option value="25">25</option><option value="50">50</option>
+                        <option value="100">100</option><option value="200">200</option><option value="500">500</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TAB SUMMARY ===================== -->
+        <div class="tab-pane fade" id="tab-summary" role="tabpanel">
+            <div id="summaryMsg" class="mb-2 small"></div>
+            <h5 class="section-title">Resumen / Detalle de Tenant</h5>
+            <div class="form-inline mb-3">
+                <label class="mr-2" for="tenantIdInput">ID Tenant:</label>
+                <input type="number" id="tenantIdInput" class="form-control mr-2" style="width:160px;">
+                <button class="btn btn-info" id="btnCargarSummary"><i class="fa fa-search"></i> Cargar</button>
+                <span id="summaryLoading" class="loading-inline ml-2" style="display:none;">Cargando...</span>
+            </div>
+            <div id="summaryContent" class="border rounded p-3 bg-light" style="display:none;"></div>
+        </div>
+
+        <!-- ===================== TAB STATS ===================== -->
+        <div class="tab-pane fade" id="tab-stats" role="tabpanel">
+            <div id="statsMsg" class="mb-2 small"></div>
+            <h5 class="section-title">Estadísticas Generales</h5>
+            <div class="row" id="statsRow">
+                <div class="col-12 text-center text-muted">Seleccione la pestaña para cargar.</div>
+            </div>
+        </div>
+
+        <!-- ===================== TAB FOLIOS ===================== -->
+        <div class="tab-pane fade" id="tab-folios" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-warning text-dark"><h5 class="mb-0">Gestión de Folios</h5></div>
+                <div class="card-body">
+                    <div id="foliosMsg" class="mb-2 small"></div>
+
+                    <form id="folioForm">
+                        <div class="form-row">
+                            <!-- ★ Nuevo selector por modal -->
+                            <div class="form-group col-md-3">
+                                <label for="folioTenantDisplay">ID Tenant <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="folioTenantDisplay" placeholder="Seleccione un tenant" readonly>
+                                    <input type="hidden" id="folioTenantId" name="tenant" required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnSeleccionarTenant">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label for="folioPlan">Plan de Folios <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="folioPlanDisplay" readonly placeholder="Seleccione un plan">
+                                    <input type="hidden" id="folioPlan" name="plan" required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnSeleccionarPlan">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label for="foliosPurchased">Cantidad de Folios</label>
+                                <input type="number" class="form-control" id="foliosPurchased" name="folios_purchased" min="1">
+                                <small class="form-text text-muted">Opcional. Si no se especifica, se usa el valor del plan</small>
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label for="orderReference">Referencia de Orden</label>
+                                <input type="text" class="form-control" id="orderReference" name="order_reference" maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="startDate">Fecha de Inicio</label>
+                                <input type="datetime-local" class="form-control" id="startDate" name="start_date" step="60">
+                                <small class="form-text text-muted">Por defecto: fecha actual</small>
+                            </div>
+
+                            <div class="form-group col-md-4" style="display:none">
+                                <label for="expiryDate">Fecha de Expiración</label>
+                                <input type="datetime-local" class="form-control" id="expiryDate" name="expiry_date">
+                                <small class="form-text text-muted">Opcional. Null para sin expiración</small>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <div class="form-check mt-4 pt-2">
+                                    <input class="form-check-input" type="checkbox" id="autoRenew" name="auto_renew">
+                                    <label class="form-check-label" for="autoRenew">Renovación Automática</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success" id="btnCrearFolioSuscripcion">
+                            <i class="fa fa-plus-circle"></i> Crear Suscripción de Folios
+                        </button>
+                        <span id="crearFolioLoading" class="loading-inline ml-2" style="display:none;">Creando...</span>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ===================== TAB FOLIOS SUSCRIPCIONES ===================== -->
+        <div class="tab-pane fade" id="tab-folios-suscripciones" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-info text-white"><h5 class="mb-0">Folios con Suscripciones</h5></div>
+                <div class="card-body">
+                    <div id="foliosSuscripcionesMsg" class="mb-2 small"></div>
+                    <!-- Filtros Folios con Suscripciones -->
+                    <form id="foliosSubsFilters" class="mb-3">
+                        <div class="form-row align-items-end">
+                            <div class="form-group col-md-3">
+                                <label for="subsSearch">Buscar (tenant, plan, ref.)</label>
+                                <input id="subsSearch" type="text" class="form-control" placeholder="Texto a buscar">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="subsStatus">Estado</label>
+                                <select id="subsStatus" class="form-control">
+                                    <option value="">--</option>
+                                    <option value="active">Activa</option>
+                                    <option value="expired">Expirada</option>
+                                    <option value="pending">Pendiente</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="subsOrdering">Ordenar</label>
+                                <select id="subsOrdering" class="form-control">
+                                    <option value="-purchase_date">Compra ↓</option>
+                                    <option value="purchase_date">Compra ↑</option>
+                                    <option value="-expiry_date">Expira ↓</option>
+                                    <option value="expiry_date">Expira ↑</option>
+                                    <option value="-usage_percentage">% Uso ↓</option>
+                                    <option value="usage_percentage">% Uso ↑</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="subsFrom">Desde (compra)</label>
+                                <input id="subsFrom" type="date" class="form-control">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="subsTo">Hasta (compra)</label>
+                                <input id="subsTo" type="date" class="form-control">
+                            </div>
+
+                            <div class="form-group col-md-1">
+                                <label for="subsPageSize">Ver</label>
+                                <select id="subsPageSize" class="form-control">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex">
+                            <button type="button" id="subsApply" class="btn btn-primary mr-2">
+                                <i class="fa fa-filter"></i> Aplicar
+                            </button>
+                            <button type="button" id="subsClear" class="btn btn-outline-secondary">
+                                Limpiar
+                            </button>
+                        </div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-sm" id="foliosSuscripcionesTable">
+                            <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tenant</th>
+                                <th>Nombre</th>
+                                <th>Plan</th>
+                                <th>Folios Comprados</th>
+                                <th>Consumidos</th>
+                                <th>Restantes</th>
+                                <th>Estado</th>
+                                <th>Fecha Compra</th>
+                                <th>Expira</th>
+                                <th>% Uso</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr><td colspan="12" class="text-center text-muted">Seleccione la pestaña para cargar.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2" id="foliosSubsPager" style="display:none;">
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" id="foliosSubsPrev" disabled>&laquo; Anterior</button>
+                            <button class="btn btn-outline-secondary btn-sm" id="foliosSubsNext" disabled>Siguiente &raquo;</button>
+                        </div>
+                        <div class="small text-muted" id="foliosSubsInfo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TAB LOOKUP/AUTOCOMPLETE ===================== -->
+        <div class="tab-pane fade" id="tab-lookup" role="tabpanel">
+            <div id="lookupMsg" class="mb-2 small"></div>
+            <h5 class="section-title">Lookup</h5>
+            <div class="form-row mb-3">
+                <div class="col-md-4">
+                    <label for="lookupSelect">Tenants (lookup)</label>
+                    <select id="lookupSelect" class="form-control"><option>Seleccione la pestaña para cargar.</option></select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-primary" id="btnReloadLookup" title="Recargar"><i class="fa fa-sync-alt"></i></button>
+                </div>
+            </div>
+
+            <h5 class="section-title">Autocomplete</h5>
+            <div class="form-group position-relative" style="max-width:400px;">
+                <label for="autocompleteInput">Buscar Tenant</label>
+                <input type="text" id="autocompleteInput" class="form-control" autocomplete="off" placeholder="Escriba para buscar...">
+                <div id="autocompleteSuggestions" class="suggestions-box" style="display:none;"></div>
+            </div>
+            <div id="autocompleteResult" class="mt-3"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal seleccionar plan -->
+<div class="modal fade" id="modalSeleccionarPlan" tabindex="-1" role="dialog" aria-labelledby="modalSeleccionarPlanLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSeleccionarPlanLabel">Seleccionar Plan de Folios</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div id="planesMsg" class="mb-2 small"></div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm" id="planesTable">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>ID</th><th>Nombre</th><th>Descripción</th><th>Folios Incluidos</th><th>Precio</th><th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody><tr><td colspan="6" class="text-center">Cargando planes...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button></div>
         </div>
     </div>
 </div>
 
-<!-- jQuery, Bootstrap JS, SweetAlert2 y SheetJS -->
+<!-- ★ Modal seleccionar tenant -->
+<div class="modal fade" id="modalSeleccionarTenant" tabindex="-1" role="dialog" aria-labelledby="modalSeleccionarTenantLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSeleccionarTenantLabel">Seleccionar Tenant</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div id="tenantsPickMsg" class="mb-2 small"></div>
+
+                <div class="form-row align-items-end mb-2">
+                    <div class="form-group col-md-4">
+                        <label for="tenantPickSearch">Buscar (name, schema, doc)</label>
+                        <input type="text" id="tenantPickSearch" class="form-control" placeholder="Texto a buscar">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="tenantPickActive">Activo</label>
+                        <select id="tenantPickActive" class="form-control">
+                            <option value="">--</option><option value="true">Sí</option><option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="tenantPickOrdering">Ordenar</label>
+                        <select id="tenantPickOrdering" class="form-control">
+                            <option value="name">Nombre ↑</option><option value="-name">Nombre ↓</option>
+                            <option value="created_on">Creación ↑</option><option value="-created_on">Creación ↓</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="tenantPickPageSize">Mostrar</label>
+                        <select id="tenantPickPageSize" class="form-control">
+                            <option value="10" selected>10</option><option value="25">25</option><option value="50">50</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 text-right">
+                        <button class="btn btn-primary btn-block" id="tenantPickApply"><i class="fa fa-filter"></i> Aplicar</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm" id="tenantsPickTable">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>ID</th><th>Schema</th><th>Nombre</th><th>Pago Hasta</th><th>Trial</th><th>Creado</th><th>Empresa</th><th>Doc Empresa</th><th>Activo</th><th>Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody><tr><td colspan="10" class="text-center">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between" id="tenantsPickPager" style="display:none;">
+                    <div>
+                        <button class="btn btn-outline-secondary btn-sm" id="tenantPickPrev">&laquo; Anterior</button>
+                        <button class="btn btn-outline-secondary btn-sm" id="tenantPickNext">Siguiente &raquo;</button>
+                    </div>
+                    <div class="small text-muted" id="tenantPickInfo"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-dismiss="modal">Cerrar</button></div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
-    $(document).ready(function(){
-        // Buscar documento
-        $('#btnBuscarDocumento').click(function() {
-            var documento = $('#documento').val();
-            if(documento.trim() === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo vacío',
-                    text: 'Ingrese un documento para buscar.'
-                });
-                return;
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="none">
+    $(function(){
+
+    // === helper para datetime-local (local time) ===
+function pad(n){ return String(n).padStart(2,'0'); }
+function toLocalInputValue(d){
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function stripSecMs(d){ d.setSeconds(0,0); return d; }
+function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+(function setupStartDatePicker(){
+  const $input = $('#startDate');
+  const MARGIN_MS = 90 * 1000; // margen para evitar “en el pasado” por lag
+
+  function nowWithMargin(){
+    return stripSecMs(new Date(Date.now() + MARGIN_MS));
+  }
+
+  function refreshMin(){
+    const now = nowWithMargin();
+    const val = $input.val();
+    const selected = val ? new Date(val) : null;
+
+    if(!selected){
+      // sin selección: mínimo = ahora+margen
+      $input.attr('min', toLocalInputValue(now));
+      return;
+    }
+
+    // si el día seleccionado es HOY -> min = ahora+margen
+    // si es FUTURO -> min = 00:00 de ese día (para no forzar hora)
+    const selDateOnly = ymd(selected);
+    const todayDateOnly = ymd(new Date());
+    if(selDateOnly === todayDateOnly){
+      $input.attr('min', toLocalInputValue(now));
+    } else {
+      const minFuture = new Date(selected);
+      minFuture.setHours(0,0,0,0);
+      $input.attr('min', toLocalInputValue(minFuture));
+    }
+  }
+
+  function clampToMin(){
+    const minStr = $input.attr('min');
+    const valStr = $input.val();
+    if(!minStr || !valStr) return;
+    const min = new Date(minStr);
+    const chosen = new Date(valStr);
+    if(chosen < min){
+      $input.val(toLocalInputValue(min));
+    }
+  }
+
+  // Inicializa: setea min y, si está vacío, propone ahora+margen
+  refreshMin();
+  if(!$input.val()){
+    $input.val(toLocalInputValue(nowWithMargin()));
+    refreshMin();
+  }
+
+  // Recalcular en cualquier interacción
+  $input.on('focus click input change', function(){
+    refreshMin();
+    clampToMin();
+  });
+
+  // Si lo deja vacío, lo rellenamos con ahora+margen
+  $input.on('blur', function(){
+    if(!$input.val()){
+      $input.val(toLocalInputValue(nowWithMargin()));
+      refreshMin();
+    }
+  });
+})();
+
+
+      // ===== utilidades =====
+      function log(){ if(window.console) console.log.apply(console, arguments); }
+      function esc(v){ return $('<div/>').text(v==null? '': v).html(); }
+      function alerta(icon,titulo,texto){ Swal.fire({ icon:icon, title:titulo, text:texto }); }
+
+      // ===== Crear Tenant (igual que tu versión) =====
+      $('#btnBuscarDocumento').on('click', buscarDocumento);
+      $('#tenantForm').on('submit', function(e){ e.preventDefault(); crearTenant(); });
+      $('#documento').on('keypress', function(e){ if(e.which===13){ e.preventDefault(); buscarDocumento(); }});
+
+      function buscarDocumento(){
+        var documento = $('#documento').val().trim();
+        if(documento===''){ alerta('warning','Campo vacío','Ingrese un documento para buscar.'); return; }
+        $('#btnBuscarDocumento').prop('disabled', true); $('#docHelp').text('Buscando...');
+        $.get('/tenants/buscar-por-documento', { documento })
+          .done(function(data){
+            if(Array.isArray(data) && data.length){
+              var c = data[0];
+              $('#verification_digit').val(c.cv || '');
+              $('#company_name').val(c.company || '');
+              $('#company_email').val(c.email || '');
+              $('#company_address').val(c.addr1 || '');
+              $('#company_phone').val(c.phone1 || '');
+              $('#whatsapp_number').val(c.phone2 || '');
+              alerta('success','Datos encontrados','Se cargó la información del cliente.');
+              $('#docHelp').text('Datos cargados.');
+            } else {
+              $('#verification_digit,#company_name,#company_email,#company_address,#company_phone,#whatsapp_number').val('');
+              alerta('info','Sin resultados','No se encontró información para ese documento.');
+              $('#docHelp').text('Sin resultados.');
             }
-            $.ajax({
-                url: '/tenants/buscar-por-documento',
-                type: 'GET',
-                data: { documento: documento },
-                success: function(data) {
-                    if(data && data.length > 0) {
-                        var cliente = data[0];
-                        $('#verification_digit').val(cliente.cv || '');
-                        $('#company_name').val(cliente.company || '');
-                        $('#company_email').val(cliente.email || '');
-                        $('#company_address').val(cliente.addr1 || '');
-                        $('#company_phone').val(cliente.phone1 || '');
-                        $('#whatsapp_number').val(cliente.phone2 || '');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Datos encontrados',
-                            text: 'Los datos del cliente han sido cargados.'
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Sin resultados',
-                            text: 'No se encontró información para ese documento.'
-                        });
-                        // Limpiar los campos del formulario
-                        $('#verification_digit').val('');
-                        $('#company_name').val('');
-                        $('#company_email').val('');
-                        $('#company_address').val('');
-                        $('#company_phone').val('');
-                        $('#whatsapp_number').val('');
-                    }
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al buscar el documento.'
-                    });
-                }
-            });
+          })
+          .fail(function(xhr){
+            alerta('error','Error','Error al buscar el documento ('+xhr.status+').');
+            $('#docHelp').text('Error en la búsqueda.');
+          })
+          .always(function(){ $('#btnBuscarDocumento').prop('disabled', false); });
+      }
+
+      function crearTenant(){
+        var data = {
+          document: $('#documento').val().trim(),
+          verification_digit: $('#verification_digit').val().trim(),
+          company_name: $('#company_name').val().trim(),
+          company_email: $('#company_email').val().trim(),
+          whatsapp_number: $('#whatsapp_number').val().trim(),
+          company_address: $('#company_address').val().trim(),
+          company_phone: $('#company_phone').val().trim()
+        };
+        if(!data.document){ alerta('warning','Documento requerido','Ingrese documento antes de crear.'); return; }
+
+        $('#btnCrear').prop('disabled', true); $('#crearTenantLoading').show();
+
+        $.ajax({
+          url: '/tenants-api/crear', type: 'POST', contentType: 'application/json', data: JSON.stringify(data)
+        }).done(function(response){
+          let json = typeof response==='string' ? JSON.parse(response) : response;
+          const companyId = json.company_id || '';
+          const correo = companyId + '@fe.binariotic.com';
+          const usuario = companyId;
+          const url = `https://${companyId}.liriumsas.app/admin`;
+          Swal.fire({
+            icon:'success', title:'¡Tenant creado!', html:`<b>Tenant creado exitosamente.</b><br><b>Correo:</b> ${correo}<br><b>Usuario:</b> ${usuario}<br><b>URL:</b> <a href="${url}" target="_blank">${url}</a>`,
+            showCancelButton:true, confirmButtonText:'Descargar Excel', cancelButtonText:'Cerrar'
+          }).then((r)=>{
+            if(r.isConfirmed){
+              const wb = XLSX.utils.book_new();
+              const ws = XLSX.utils.aoa_to_sheet([['Correo','Usuario','URL'], [correo, usuario, url]]);
+              XLSX.utils.book_append_sheet(wb, ws, 'Tenant');
+              XLSX.writeFile(wb, `tenant_${companyId}.xlsx`);
+            }
+          });
+        }).fail(function(xhr){
+          alerta('error','Error','No se pudo crear el tenant ('+xhr.status+').');
+        }).always(function(){
+          $('#btnCrear').prop('disabled', false); $('#crearTenantLoading').hide();
         });
+      }
 
-        // Enviar formulario crear tenant
-        $('#tenantForm').on('submit', function(e) {
-            e.preventDefault();
+      // ===== Listado (igual que tu versión, recortado en comentarios) =====
+      let listadoLoaded=false, currentPage=1, pageSize=10, totalPages=1, totalCount=0;
+      $('#btnAplicarFiltros').click(function(){ currentPage=1; cargarListado(); });
+      $('#pageSizeSelect').change(function(){ pageSize=parseInt($(this).val(),10); currentPage=1; cargarListado(); });
+      $(document).on('click','#firstPage:not([disabled])',function(){ currentPage=1; cargarListado(); });
+      $(document).on('click','#lastPage:not([disabled])',function(){ currentPage=totalPages; cargarListado(); });
+      $(document).on('click','#prevPage:not([disabled])',function(){ if(currentPage>1){ currentPage--; cargarListado(); } });
+      $(document).on('click','#nextPage:not([disabled])',function(){ if(currentPage<totalPages){ currentPage++; cargarListado(); } });
+      $(document).on('click','.page-btn',function(){ const p=parseInt($(this).data('page'),10); if(p!==currentPage){ currentPage=p; cargarListado(); }});
+      function renderPageNumbers(current, total){
+        const el=$('#pageNumbers'); el.empty(); if(total<=1) return;
+        const maxVisible=5; let start=Math.max(1,current-Math.floor(maxVisible/2)); let end=Math.min(total,start+maxVisible-1);
+        if(end-start+1<maxVisible){ start=Math.max(1,end-maxVisible+1); }
+        if(start>1){ el.append(`<button class="btn btn-outline-secondary btn-sm page-btn" data-page="1">1</button>`); if(start>2) el.append(`<span class="px-2">...</span>`); }
+        for(let i=start;i<=end;i++){ const cls=i===current?'btn-secondary':'btn-outline-secondary'; el.append(`<button class="btn ${cls} btn-sm page-btn" data-page="${i}">${i}</button>`); }
+        if(end<total){ if(end<total-1) el.append(`<span class="px-2">...</span>`); el.append(`<button class="btn btn-outline-secondary btn-sm page-btn" data-page="${total}">${total}</button>`); }
+      }
+      function updateNavigationButtons(){ $('#firstPage,#prevPage').prop('disabled',currentPage<=1); $('#nextPage,#lastPage').prop('disabled',currentPage>=totalPages); }
+      function updatePaginationInfo(){ const start=((currentPage-1)*pageSize)+1; const end=Math.min(currentPage*pageSize,totalCount); $('#pageInfo').text(`Mostrando ${start}-${end} de ${totalCount} registros`); }
+      function construirQuery(){
+        const q={}; const s=$('#searchInput').val().trim(); if(s) q.search=s;
+        const a=$('#activeSelect').val(); if(a!=='') q.active=a;
+        const ex=$('#expiredSelect').val(); if(ex!=='') q.expired=ex;
+        const ot=$('#onTrialSelect').val(); if(ot!=='') q.on_trial=ot;
+        const ord=$('#orderingSelect').val(); if(ord) q.ordering=ord;
+        q.page=currentPage; q.page_size=pageSize; return q;
+      }
+      function cargarListado(){
+        $('#tenantsTable tbody').html('<tr><td colspan="12" class="text-center">Cargando...</td></tr>'); $('#paginationInfo').hide();
+        $.get('/tenants-api', construirQuery()).done(function(data){ renderListado(data); listadoLoaded=true; })
+          .fail(function(xhr){ $('#tenantsTable tbody').html('<tr><td colspan="12" class="text-danger text-center">Error '+xhr.status+'</td></tr>'); $('#paginationInfo').hide(); });
+      }
+      function renderListado(data){
+        if(!data || !data.results){ $('#tenantsTable tbody').html('<tr><td colspan="12" class="text-center">Sin datos</td></tr>'); $('#paginationInfo').hide(); return; }
+        const rows=data.results.map(t=>(
+          `<tr data-id="${t.id}" class="fila-tenant pointer">
+            <td>${t.id}</td><td>${esc(t.schema_name)}</td><td>${esc(t.name)}</td>
+            <td>${esc(t.paid_until||'')}</td><td>${t.on_trial?'Sí':'No'}</td>
+            <td>${esc(t.created_on||'')}</td><td>${esc(t.company_name||'')}</td>
+            <td>${esc(t.company_document||'')}</td><td>${t.is_active?'Sí':'No'}</td>
+            <td>${t.is_expired?'Sí':'No'}</td><td>${t._status_display?`<span class="badge badge-info badge-status">${esc(t._status_display)}</span>`:''}</td>
+            <td><button class="btn btn-outline-info btn-sm btnVerSummary" data-id="${t.id}" title="Ver resumen"><i class="fa fa-eye"></i></button></td>
+          </tr>`
+        )).join('');
+        $('#tenantsTable tbody').html(rows);
+        currentPage = data.current_page || data.page || currentPage;
+        totalPages  = data.total_pages || Math.ceil((data.count||0)/pageSize) || 1;
+        totalCount  = data.count || 0;
+        if(totalPages>1){ $('#paginationInfo').show(); renderPageNumbers(currentPage,totalPages); updateNavigationButtons(); updatePaginationInfo(); } else { $('#paginationInfo').hide(); }
+      }
+      $('#mainTabs a[href="#tab-listado"]').on('shown.bs.tab', function(){ if(!listadoLoaded) cargarListado(); });
+      $(document).on('click','.btnVerSummary', function(){ const id=$(this).data('id'); $('#tenantIdInput').val(id); mostrarSummary(id); $('#mainTabs a[href="#tab-summary"]').tab('show'); });
 
-            var data = {
-                document: $('#documento').val(),
-                verification_digit: $('#verification_digit').val(),
-                company_name: $('#company_name').val(),
-                company_email: $('#company_email').val(),
-                whatsapp_number: $('#whatsapp_number').val(),
-                company_address: $('#company_address').val(),
-                company_phone: $('#company_phone').val()
-            };
+      // ===== Summary / Stats (igual que tu versión) =====
+      function mostrarSummary(id){
+        if(!id){ alerta('warning','ID requerido','Ingrese un ID de tenant válido.'); return; }
+        $('#summaryLoading').show(); $('#summaryContent').hide();
+        $.get(`/tenants-api/${id}/summary`).done(function(d){ renderSummary(d); $('#summaryContent').show(); })
+          .fail(function(){ alerta('error','Error','No se pudo cargar el resumen del tenant.'); })
+          .always(function(){ $('#summaryLoading').hide(); });
+      }
+      function renderSummary(d){
+        if(!d){ $('#summaryContent').html('<div class="text-danger">Sin datos</div>').show(); return; }
+        const html=`<h6>Identificación</h6>
+          <div class="row">
+            <div class="col-md-3"><strong>ID:</strong> ${d.id}</div>
+            <div class="col-md-3"><strong>Schema:</strong> ${esc(d.schema_name)}</div>
+            <div class="col-md-6"><strong>Nombre:</strong> ${esc(d.name)}</div>
+          </div><hr class="my-2">
+          <h6>Estado</h6>
+          <div class="row">
+            <div class="col-md-3"><strong>Activo:</strong> ${d.is_active?'Sí':'No'}</div>
+            <div class="col-md-3"><strong>Expirado:</strong> ${d.is_expired?'Sí':'No'}</div>
+            <div class="col-md-3"><strong>Días para expirar:</strong> ${d.days_until_expiration!=null? d.days_until_expiration:'-'}</div>
+            <div class="col-md-3"><strong>Trial:</strong> ${d.on_trial?'Sí':'No'}</div>
+          </div>
+          <div class="row mt-1">
+            <div class="col-md-4"><strong>Paid Until:</strong> ${esc(d.paid_until||'')}</div>
+            <div class="col-md-4"><strong>Creado:</strong> ${esc(d.created_on||'')}</div>
+            <div class="col-md-4"><strong>Status Display:</strong> ${esc(d.status_display||'')}</div>
+          </div><hr class="my-2">
+          <h6>Compañía</h6>
+          <div class="row">
+            <div class="col-md-4"><strong>Documento:</strong> ${esc(d.company_info? d.company_info.document:'')}</div>
+            <div class="col-md-4"><strong>Razón Social:</strong> ${esc(d.company_info? d.company_info.name:'')}</div>
+            <div class="col-md-4"><strong>Email:</strong> ${esc(d.company_info? d.company_info.email:'')}</div>
+          </div>
+          <div class="row mt-1">
+            <div class="col-md-4"><strong>Teléfono:</strong> ${esc(d.company_info? d.company_info.phone:'')}</div>
+            <div class="col-md-4"><strong>Ciudad:</strong> ${esc(d.company_info? d.company_info.city:'')}</div>
+          </div><hr class="my-2">
+          <h6>Uso</h6>
+          <div class="row">
+            <div class="col-md-3"><strong>Facturas:</strong> ${d.usage_summary? d.usage_summary.invoices_count:'-'}</div>
+            <div class="col-md-3"><strong>Usuarios:</strong> ${d.usage_summary? d.usage_summary.users_count:'-'}</div>
+            <div class="col-md-3"><strong>Storage:</strong> ${d.usage_summary? d.usage_summary.storage_used:'-'}</div>
+            <div class="col-md-3"><strong>Última actividad:</strong> ${esc(d.usage_summary? d.usage_summary.last_activity:'')}</div>
+          </div>`;
+        $('#summaryContent').html(html).show();
+        $('#tenantIdInput').val(d.id);
+      }
+      $('#btnCargarSummary').click(function(){ const id=$('#tenantIdInput').val(); mostrarSummary(id); });
 
-            $.ajax({
-                url: '/tenants-api/crear',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    let json;
-                    try {
-                        json = typeof response === 'string' ? JSON.parse(response) : response;
-                    } catch (e) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response
-                        });
-                        return;
-                    }
-                    const companyId = json.company_id || '';
-                    const correo = companyId + '@fe.binariotic.com';
-                    const usuario = companyId;
-                    const url = `https://${companyId}.liriumsas.app/admin`;
+      $('#mainTabs a[href="#tab-stats"]').on('shown.bs.tab', function(){ cargarStats(); });
+      function cargarStats(){
+        $('#statsRow').html('<div class="col-12 text-center">Cargando estadísticas...</div>');
+        $.get('/tenants-api/stats').done(function(s){
+          const items=[{l:'Total',v:s.total,c:'primary'},{l:'Activos',v:s.active,c:'success'},{l:'En Trial',v:s.on_trial,c:'info'},{l:'Expirados',v:s.expired,c:'danger'},{l:'Por Expirar',v:s.expiring_soon,c:'warning'}];
+          const html=items.map(c=>`
+            <div class="col-sm-6 col-md-4 col-lg-2 mb-3">
+              <div class="card card-kpi shadow-sm">
+                <div class="card-body p-2 text-center">
+                  <div class="h5 mb-0 text-${c.c}">${c.v != null ? c.v : '-'}</div>
+                  <small class="text-muted">${c.l}</small>
+                </div>
+              </div>
+            </div>`).join('');
+          $('#statsRow').html(html);
+        }).fail(function(){ $('#statsRow').html('<div class="col-12 text-center text-danger">Error al cargar estadísticas</div>'); });
+      }
 
-                    const mensajeHtml = `
-                        <b>Tenant creado exitosamente.</b><br>
-                        <b>Correo:</b> ${correo}<br>
-                        <b>Usuario:</b> ${usuario}<br>
-                        <b>URL:</b> <a href="${url}" target="_blank">${url}</a>
-                    `;
+      // ===== Lookup / Autocomplete (igual) =====
+      let lookupLoaded=false;
+      $('#btnReloadLookup').click(function(){ cargarLookup(true); });
+      function cargarLookup(force){
+        if(lookupLoaded && !force) return;
+        $('#lookupMsg').text(''); $('#lookupSelect').html('<option>Cargando...</option>');
+        $.get('/tenants-api/lookup').done(function(data){
+          lookupLoaded=true;
+          if(!data || !data.length){ $('#lookupSelect').html('<option>Sin datos</option>'); return; }
+          const opts='<option value="">-- seleccionar --</option>'+data.map(i=>`<option value="${esc(i.value)}">${esc(i.label)}</option>`).join('');
+          $('#lookupSelect').html(opts);
+        }).fail(function(xhr){ $('#lookupMsg').addClass('tab-error').text('Error '+xhr.status+' en lookup'); $('#lookupSelect').html('<option>Error</option>'); });
+      }
+      $('#lookupSelect').change(function(){ const val=$(this).val(); if(val){ mostrarSummary(val); $('#mainTabs a[href="#tab-summary"]').tab('show'); }});
+      let autocompleteTimer=null;
+      $('#autocompleteInput').on('input', function(){
+        const term=$(this).val().trim(); clearTimeout(autocompleteTimer);
+        if(!term){ $('#autocompleteSuggestions').hide(); return; }
+        autocompleteTimer=setTimeout(()=> buscarAutocomplete(term), 350);
+      });
+      function buscarAutocomplete(term){
+        $.get('/tenants-api/search_autocomplete', { search: term, page_size: 20 })
+          .done(function(list){ renderAutocomplete(list); })
+          .fail(function(){ $('#autocompleteSuggestions').hide(); });
+      }
+      function renderAutocomplete(list){
+        if(!Array.isArray(list) || !list.length){ $('#autocompleteSuggestions').hide(); return; }
+        const html=list.map(i=>`<div data-id="${i.id}" class="item-autocomplete">${esc(i.name)} <small class="text-muted">(${esc(i.schema_name)})</small></div>`).join('');
+        $('#autocompleteSuggestions').html(html).show();
+      }
+      $(document).on('click','.item-autocomplete', function(){ const id=$(this).data('id'); $('#autocompleteSuggestions').hide(); mostrarSummary(id); $('#mainTabs a[href="#tab-summary"]').tab('show'); });
+      $(document).click(function(e){ if(!$(e.target).closest('#autocompleteInput,#autocompleteSuggestions').length){ $('#autocompleteSuggestions').hide(); }});
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Tenant creado!',
-                        html: mensajeHtml,
-                        showCancelButton: true,
-                        confirmButtonText: 'Descargar Excel',
-                        cancelButtonText: 'Cerrar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            const wb = XLSX.utils.book_new();
-                            const wsData = [
-                                ['Correo', 'Usuario', 'URL'],
-                                [correo, usuario, url]
-                            ];
-                            const ws = XLSX.utils.aoa_to_sheet(wsData);
-                            XLSX.utils.book_append_sheet(wb, ws, 'Tenant');
-                            XLSX.writeFile(wb, `tenant_${companyId}.xlsx`);
-                        }
-                    });
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Ocurrió un error al crear el tenant.'
-                    });
-                }
-            });
+      // ===== Planes (paginado y selección) =====
+      $('#btnSeleccionarPlan').click(function(){ cargarPlanes(); $('#modalSeleccionarPlan').modal('show'); });
+
+      function normalizeApiUrl(u){
+        try{ const url=new URL(u, window.location.origin); return url.pathname + url.search; }
+        catch(e){ return u; }
+      }
+      function fetchAllPlans(url, acc=[], guard={pages:0, max:50}){
+        const finalUrl=normalizeApiUrl(url);
+        return $.ajax({ url: finalUrl, method:'GET' }).then(function(resp){
+          const chunk = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.results) ? resp.results : []);
+          const nextUrl = resp && resp.next ? resp.next : null;
+          const all = acc.concat(chunk);
+          guard.pages++;
+          if(nextUrl && guard.pages < guard.max){ return fetchAllPlans(nextUrl, all, guard); }
+          return all;
         });
+      }
+      function cargarPlanes(pageSize=100){
+        $('#planesMsg').removeClass('tab-error').text('');
+        $('#planesTable tbody').html('<tr><td colspan="6" class="text-center">Cargando planes...</td></tr>');
+        const startUrl=`/api/shared/configurations/folio-plans/?page_size=${encodeURIComponent(pageSize)}`;
+        fetchAllPlans(startUrl).then(function(planes){
+          if(!planes.length){ $('#planesTable tbody').html('<tr><td colspan="6" class="text-center text-muted">Sin planes</td></tr>'); return; }
+          planes.sort((a,b)=>(a.id||0)-(b.id||0));
+          const rows=planes.map(p=>{
+            const included=p.folios_included ?? p.included_folios ?? p.included ?? null;
+            const price=(p.price!=null)? p.price : '-';
+            return `<tr>
+              <td>${p.id}</td><td>${esc(p.name||'')}</td><td>${esc(p.description||'')}</td>
+              <td>${included!=null? included : '-'}</td><td>${price}</td>
+              <td><button type="button" class="btn btn-sm btn-primary seleccionar-plan"
+                  data-id="${p.id}" data-name="${esc(p.name||'')}" data-included="${included!=null? included:''}">
+                  Seleccionar</button></td></tr>`;
+          }).join('');
+          $('#planesTable tbody').html(rows);
+        }).catch(function(err){
+          $('#planesTable tbody').html('<tr><td colspan="6" class="text-danger text-center">Error al cargar planes</td></tr>');
+          $('#planesMsg').addClass('tab-error').text('Error al cargar planes');
+          console.error('Error cargarPlanes:', err);
+        });
+      }
+
+      $(document).on('click', '.seleccionar-plan', function(){
+        const planId=$(this).data('id'), planName=$(this).data('name')||'', included=$(this).data('included');
+        $('#folioPlan').val(planId);
+        $('#folioPlanDisplay').val(included ? `${planName} (${included} folios)` : planName);
+        $('#foliosPurchased').val('');
+        if(included) $('#foliosPurchased').val(included);
+        $('#modalSeleccionarPlan').modal('hide');
+        alerta('success','Plan seleccionado',`Se ha seleccionado el plan #${planId} — ${planName}`);
+      });
+
+      // ===== Tenant Picker (nuevo) =====
+      let tenantPickPage=1, tenantPickTotalPages=1;
+      $('#btnSeleccionarTenant').on('click', function(){ tenantPickPage=1; $('#modalSeleccionarTenant').modal('show'); cargarTenantsPicker(); });
+      $('#tenantPickApply').on('click', function(){ tenantPickPage=1; cargarTenantsPicker(); });
+      $('#tenantPickPrev').on('click', function(){ if(tenantPickPage>1){ tenantPickPage--; cargarTenantsPicker(); }});
+      $('#tenantPickNext').on('click', function(){ if(tenantPickPage<tenantPickTotalPages){ tenantPickPage++; cargarTenantsPicker(); }});
+      $('#tenantPickSearch').on('keypress', function(e){ if(e.which===13){ e.preventDefault(); tenantPickPage=1; cargarTenantsPicker(); }});
+
+      function qTenantsFromPicker(){
+        const q={}; const s=$('#tenantPickSearch').val().trim(); if(s) q.search=s;
+        const a=$('#tenantPickActive').val(); if(a!=='') q.active=a;
+        const ord=$('#tenantPickOrdering').val(); if(ord) q.ordering=ord;
+        q.page = tenantPickPage; q.page_size = parseInt($('#tenantPickPageSize').val(),10)||10; return q;
+      }
+      function cargarTenantsPicker(){
+        $('#tenantsPickMsg').text(''); $('#tenantsPickTable tbody').html('<tr><td colspan="10" class="text-center">Cargando...</td></tr>'); $('#tenantsPickPager').hide();
+        $.get('/tenants-api', qTenantsFromPicker()).done(function(data){ renderTenantsPicker(data); })
+          .fail(function(xhr){ $('#tenantsPickTable tbody').html('<tr><td colspan="10" class="text-danger text-center">Error '+xhr.status+'</td></tr>'); });
+      }
+      function renderTenantsPicker(data){
+        const pageSize=parseInt($('#tenantPickPageSize').val(),10)||10;
+        if(!data || !data.results || !data.results.length){
+          $('#tenantsPickTable tbody').html('<tr><td colspan="10" class="text-center text-muted">Sin datos</td></tr>'); $('#tenantsPickPager').hide(); return;
+        }
+        const rows=data.results.map(t=>`
+          <tr>
+            <td>${t.id}</td><td>${esc(t.schema_name)}</td><td>${esc(t.name)}</td>
+            <td>${esc(t.paid_until||'')}</td><td>${t.on_trial?'Sí':'No'}</td><td>${esc(t.created_on||'')}</td>
+            <td>${esc(t.company_name||'')}</td><td>${esc(t.company_document||'')}</td><td>${t.is_active?'Sí':'No'}</td>
+            <td><button class="btn btn-sm btn-primary seleccionar-tenant" data-id="${t.id}" data-name="${esc(t.name)}" data-schema="${esc(t.schema_name)}">Seleccionar</button></td>
+          </tr>`).join('');
+        $('#tenantsPickTable tbody').html(rows);
+        const count=data.count||0; tenantPickTotalPages = data.total_pages || Math.ceil(count/pageSize) || 1;
+        if(tenantPickTotalPages>1){ $('#tenantsPickPager').show(); $('#tenantPickInfo').text(`Página ${tenantPickPage} de ${tenantPickTotalPages} — ${count} registros`); }
+        else { $('#tenantsPickPager').hide(); }
+      }
+      $(document).on('click','.seleccionar-tenant', function(){
+        const id=$(this).data('id'), name=$(this).data('name')||'', schema=$(this).data('schema')||'';
+        $('#folioTenantId').val(id);
+        $('#folioTenantDisplay').val(`${schema} — ${name} (ID: ${id})`);
+        $('#modalSeleccionarTenant').modal('hide');
+        // opcional: limpiar plan/cantidad si cambias de tenant:
+        // $('#folioPlan').val(''); $('#folioPlanDisplay').val(''); $('#foliosPurchased').val('');
+      });
+
+
+// ===== Crear Suscripción de Folios =====
+$('#folioForm').on('submit', function(e){
+  e.preventDefault();
+  crearSuscripcionFolio();
+});
+
+function crearSuscripcionFolio() {
+  const tenantId = $('#folioTenantId').val().trim();
+  const planId   = $('#folioPlan').val().trim();
+
+  if (!tenantId) { alerta('warning','Campo requerido','Debe seleccionar el Tenant'); return; }
+  if (!planId)   { alerta('warning','Campo requerido','Debe seleccionar un plan de folios'); return; }
+
+  const data = {
+    tenant: parseInt(tenantId),
+    plan: parseInt(planId),
+    auto_renew: $('#autoRenew').is(':checked'),
+    is_active: true // ← requerido por el backend
+  };
+
+  const foliosPurchased = $('#foliosPurchased').val().trim();
+  if (foliosPurchased) data.folios_purchased = parseInt(foliosPurchased);
+
+
+
+  // === Fechas ===
+const startDateStr = $('#startDate').val();
+
+// margen para evitar "en el pasado"
+const marginMs = 90 * 1000; // 90s
+const now = new Date();
+
+// si el usuario puso fecha, la tomamos; si no, usamos "ahora"
+const desiredStart = startDateStr ? new Date(startDateStr) : now;
+
+// si la fecha deseada es menor que (ahora + margen), la movemos a (ahora + margen)
+let effectiveStart = desiredStart.getTime() < (now.getTime() + marginMs)
+  ? new Date(now.getTime() + marginMs)
+  : desiredStart;
+
+// opcional: redondear a minutos exactos
+effectiveStart.setSeconds(0, 0);
+
+data.start_date = effectiveStart.toISOString();
+
+// expiry_date = +1 año exacto desde start_date
+const expiry = new Date(effectiveStart);
+expiry.setFullYear(expiry.getFullYear() + 1);
+data.expiry_date = expiry.toISOString();
+
+
+
+  // Envío
+  $('#btnCrearFolioSuscripcion').prop('disabled', true);
+  $('#crearFolioLoading').show();
+  $('#foliosMsg').text('');
+
+  console.log('📤 JSON enviado:', JSON.stringify(data, null, 2));
+
+  $.ajax({
+    url: '/api/shared/configurations/tenant-folio-subscriptions/',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data)
+  })
+  .done(function(resp){
+    Swal.fire({
+      icon: 'success',
+      title: '¡Suscripción creada!',
+      html: `
+        <p><strong>Suscripción de folios creada exitosamente</strong></p>
+        <p><strong>ID:</strong> ${resp.id || 'N/A'}</p>
+        <p><strong>Tenant:</strong> ${resp.tenant || tenantId}</p>
+        <p><strong>Plan:</strong> ${resp.plan || planId}</p>
+        <p><strong>Folios:</strong> ${resp.folios_purchased || data.folios_purchased || 'Según plan'}</p>
+        <p><strong>Fecha inicio:</strong> ${resp.start_date || data.start_date}</p>
+        <p><strong>Fecha expiración:</strong> ${resp.expiry_date || 'Sin expiración'}</p>`
+    }).then(()=>{
+      $('#folioForm')[0].reset();
+      $('#folioPlan, #folioTenantId').val('');
+      $('#folioPlanDisplay').val('');
+      $('#folioTenantDisplay').val('');
+    });
+  })
+  .fail(function(xhr){
+    let msg='No se pudo crear la suscripción de folios';
+    if (xhr.responseJSON && xhr.responseJSON.detail) msg = xhr.responseJSON.detail;
+    else if (xhr.responseText) { try { const e = JSON.parse(xhr.responseText); if (e.error) msg = e.error; } catch(_){} }
+    alerta('error','Error',`${msg} (${xhr.status})`);
+    $('#foliosMsg').addClass('tab-error').text(`Error: ${msg}`);
+  })
+  .always(function(){
+    $('#btnCrearFolioSuscripcion').prop('disabled', false);
+    $('#crearFolioLoading').hide();
+  });
+}
+
+
+
+    let foliosSubsLoaded = false;
+let foliosSubsNext = null, foliosSubsPrev = null, foliosSubsCount = 0;
+
+$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+  const target = $(e.target).attr('href');
+  if (target === '#tab-folios-suscripciones' && !foliosSubsLoaded) {
+    cargarFoliosSuscripciones(buildSubsUrl(1)); // carga inicial
+    foliosSubsLoaded = true;
+  }
+});
+
+
+        function normalizarUrl(u) {
+  if (!u) return null;
+
+  // absoluta -> conservar path+query
+  if (/^https?:\/\//i.test(u)) {
+    const parsed = new URL(u);
+    u = parsed.pathname + parsed.search; // queda /api/shared/...
+  }
+
+  // relativa sin slash (p. ej. 'tenant-folio-subscriptions/?page=2')
+  if (!u.startsWith('/')) {
+    u = '/api/shared/configurations/' + u;
+  }
+
+  // forzar endpoint paginado
+  u = u.replace('/tenant-folio-subscriptions/', '/tenant-folio-subscriptions-paged/');
+
+  return u;
+}
+
+// base y helper para armar la URL con filtros
+function buildSubsUrl(page) {
+  const ps   = $('#subsPageSize').val() || '20';
+  let url = `/api/shared/configurations/tenant-folio-subscriptions-paged/?page_size=${encodeURIComponent(ps)}`;
+
+  const q    = $('#subsSearch').val().trim();
+  const st   = $('#subsStatus').val();      // '', 'active', 'expired', 'pending'
+  const ord  = $('#subsOrdering').val();
+  const from = $('#subsFrom').val();        // YYYY-MM-DD
+  const to   = $('#subsTo').val();          // YYYY-MM-DD
+
+  if (q)    url += `&search=${encodeURIComponent(q)}`;
+  if (ord)  url += `&ordering=${encodeURIComponent(ord)}`;
+
+  // Mapeo de Estado → campos booleanos del backend
+  if (st === 'active')   url += `&is_active=true`;
+  if (st === 'expired')  url += `&is_expired=true`;
+  if (st === 'pending')  url += `&is_active=false`; // ajusta si tu API define otro criterio para "Pendiente"
+
+  // Rango por fecha de compra (convención típica de DRF)
+  if (from) url += `&purchase_date_after=${encodeURIComponent(from)}`;
+  if (to)   url += `&purchase_date_before=${encodeURIComponent(to)}`;
+
+  if (page) url += `&page=${encodeURIComponent(page)}`;
+  return url;
+}
+
+
+function cargarFoliosSuscripciones(url) {
+  const finalUrl = normalizarUrl(url || buildSubsUrl(1));
+  $('#foliosSuscripcionesMsg').removeClass('tab-error').text('Cargando...');
+  $('#foliosSuscripcionesTable tbody').html('<tr><td colspan="12" class="text-center text-muted">Cargando...</td></tr>');
+
+  $.get(finalUrl).done(function (data) {
+    foliosSubsNext  = normalizarUrl(data.next  || null);
+    foliosSubsPrev  = normalizarUrl(data.previous || null);
+    foliosSubsCount = data.count || 0;
+    renderFoliosSuscripciones(data.results || []);
+  }).fail(function (xhr) {
+    $('#foliosSuscripcionesMsg').addClass('tab-error').text('Error al cargar (' + xhr.status + ')');
+    $('#foliosSuscripcionesTable tbody').html('<tr><td colspan="12" class="text-center text-danger">Error al cargar datos</td></tr>');
+    $('#foliosSubsPager').hide();
+  });
+}
+
+$('#foliosSubsPrev').on('click', function () {
+  if (foliosSubsPrev)  cargarFoliosSuscripciones(foliosSubsPrev);
+});
+$('#foliosSubsNext').on('click', function () {
+  if (foliosSubsNext)  cargarFoliosSuscripciones(foliosSubsNext);
+});
+
+function renderFoliosSuscripciones(list){
+  if(!list.length){
+    $('#foliosSuscripcionesTable tbody').html('<tr><td colspan="12" class="text-center text-muted">Sin resultados.</td></tr>');
+    $('#foliosSuscripcionesMsg').text('No hay registros para mostrar.');
+    $('#foliosSubsPager').hide();
+    return;
+  }
+
+  const rows = list.map(item => {
+    const purchase = item.purchase_date ? item.purchase_date.split('T')[0] : '';
+    const expiry   = item.expiry_date   ? item.expiry_date.split('T')[0]   : '';
+    return `
+      <tr>
+        <td>${esc(item.id)}</td>
+        <td>${esc(item.tenant)}</td>
+        <td>${esc(item.tenant_detail && item.tenant_detail.name)}</td>
+        <td>${esc(item.plan_detail && item.plan_detail.name)}</td>
+        <td>${esc(item.folios_purchased)}</td>
+        <td>${esc(item.folios_consumed)}</td>
+        <td>${esc(item.folios_remaining)}</td>
+        <td>${esc(item.status_display)}</td>
+        <td>${esc(purchase)}</td>
+        <td>${esc(expiry)}</td>
+        <td>${esc(item.usage_percentage)}</td>
+      </tr>`;
+  }).join('');
+
+  $('#foliosSuscripcionesTable tbody').html(rows);
+  $('#foliosSuscripcionesMsg').text(`Mostrando ${list.length} de ${foliosSubsCount} registros.`);
+  actualizarPagerFoliosSubs();
+}
+
+function actualizarPagerFoliosSubs(){
+  if (foliosSubsNext || foliosSubsPrev) {
+    $('#foliosSubsPager').show();
+    $('#foliosSubsPrev').prop('disabled', !foliosSubsPrev);
+    $('#foliosSubsNext').prop('disabled', !foliosSubsNext);
+    $('#foliosSubsInfo').text(`Total: ${foliosSubsCount}`);
+  } else {
+    $('#foliosSubsPager').hide();
+  }
+}
+
+// Eventos de filtros/paginación
+$('#subsApply').on('click', function () {
+  cargarFoliosSuscripciones(buildSubsUrl(1));
+});
+
+$('#subsClear').on('click', function () {
+  $('#subsSearch').val('');
+  $('#subsStatus').val('');
+  $('#subsOrdering').val('-purchase_date');
+  $('#subsFrom').val('');
+  $('#subsTo').val('');
+  $('#subsPageSize').val('20');
+  cargarFoliosSuscripciones(buildSubsUrl(1));
+});
+
+
+//$('#foliosSubsPrev').on('click', function(){ if(foliosSubsPrev){ cargarFoliosSuscripciones(foliosSubsPrev); } });
+//$('#foliosSubsNext').on('click', function(){ if(foliosSubsNext){ cargarFoliosSuscripciones(foliosSubsNext); } });
+
+
+
+      // ===== Lazy loads de tabs =====
+      let statsLoaded=false, summaryAuto=false;
+      $('a[data-toggle="tab"]').on('shown.bs.tab', function(e){
+        const target=$(e.target).attr('href');
+        if(target==='#tab-listado' && !listadoLoaded){ cargarListado(); }
+        if(target==='#tab-stats' && !statsLoaded){ cargarStats(); statsLoaded=true; }
+        if(target==='#tab-lookup' && !lookupLoaded){ cargarLookup(); }
+        if(target==='#tab-summary' && !summaryAuto){ summaryAuto=true; }
+      });
     });
 </script>
 </body>
